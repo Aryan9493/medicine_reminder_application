@@ -6,7 +6,8 @@ import '../logic/medicine_provider.dart';
 import '../../../../app/theme.dart';
 
 class AddMedicineScreen extends ConsumerStatefulWidget {
-  const AddMedicineScreen({super.key});
+  final Medicine? medicine;
+  const AddMedicineScreen({super.key, this.medicine});
 
   @override
   ConsumerState<AddMedicineScreen> createState() => _AddMedicineScreenState();
@@ -17,6 +18,16 @@ class _AddMedicineScreenState extends ConsumerState<AddMedicineScreen> {
   final _nameController = TextEditingController();
   final _doseController = TextEditingController();
   DateTime? _selectedTime;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.medicine != null) {
+      _nameController.text = widget.medicine!.name;
+      _doseController.text = widget.medicine!.dose;
+      _selectedTime = widget.medicine!.time;
+    }
+  }
 
   Future<void> _pickTime() async {
     final pickedTime = await showTimePicker(
@@ -51,17 +62,29 @@ class _AddMedicineScreenState extends ConsumerState<AddMedicineScreen> {
 
   void _saveMedicine() {
     if (_formKey.currentState!.validate() && _selectedTime != null) {
-      final medicine = Medicine(
-        name: _nameController.text.trim(),
-        dose: _doseController.text.trim(),
-        time: _selectedTime!,
-      );
-      ref.read(medicineNotifierProvider.notifier).addMedicine(medicine);
-      _showSuccessDialog(medicine.name);
+      if (widget.medicine != null) {
+        final updatedMedicine = widget.medicine!.copyWith(
+          name: _nameController.text.trim(),
+          dose: _doseController.text.trim(),
+          time: _selectedTime!,
+        );
+        ref
+            .read(medicineNotifierProvider.notifier)
+            .updateMedicine(updatedMedicine);
+        _showSuccessDialog(updatedMedicine.name, isEdit: true);
+      } else {
+        final medicine = Medicine(
+          name: _nameController.text.trim(),
+          dose: _doseController.text.trim(),
+          time: _selectedTime!,
+        );
+        ref.read(medicineNotifierProvider.notifier).addMedicine(medicine);
+        _showSuccessDialog(medicine.name, isEdit: false);
+      }
     }
   }
 
-  void _showSuccessDialog(String name) {
+  void _showSuccessDialog(String name, {required bool isEdit}) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -77,7 +100,12 @@ class _AddMedicineScreenState extends ConsumerState<AddMedicineScreen> {
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text('$name added successfully!', textAlign: TextAlign.center),
+            Text(
+              isEdit
+                  ? '$name updated successfully!'
+                  : '$name added successfully!',
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
@@ -140,9 +168,9 @@ class _AddMedicineScreenState extends ConsumerState<AddMedicineScreen> {
         background: Container(
           decoration: const BoxDecoration(gradient: AppTheme.tealGradient),
         ),
-        title: const Text(
-          'Add Medicine',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        title: Text(
+          widget.medicine != null ? 'Edit Medicine' : 'Add Medicine',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
       ),
       leading: IconButton(

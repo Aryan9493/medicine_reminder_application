@@ -115,8 +115,54 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
   }
 
   Future<void> deleteMedicine(String id) async {
+    try {
+      final medicine = state.medicines.firstWhere((m) => m.id == id);
+      await _notificationService.cancelNotification(medicine.notificationId);
+    } catch (_) {
+      // Medicine already gone or id not found
+    }
     await _storage.deleteMedicine(id);
-    await _notificationService.cancelNotification(id.hashCode);
     _loadMedicines();
+  }
+
+  Future<void> updateMedicine(Medicine medicine) async {
+    await _storage.updateMedicine(medicine);
+    await _notificationService.cancelNotification(medicine.notificationId);
+    await _notificationService.scheduleNotification(medicine);
+    _loadMedicines();
+  }
+
+  Future<void> testNotification(Medicine medicine) async {
+    await _notificationService.showInstantNotification(medicine);
+  }
+
+  Future<void> snoozeMedicine(Medicine medicine, Duration duration) async {
+    // 1. Cancel the main notification (clears tray and stops current schedule)
+    await _notificationService.cancelNotification(medicine.notificationId);
+
+    // 2. Reschedule the main recurring notification for tomorrow (so we don't lose the cycle)
+    await _notificationService.scheduleNotification(
+      medicine,
+      forceNextDay: true,
+    );
+
+    // 3. Schedule the one-off snooze notification
+    await _notificationService.snoozeNotification(medicine, duration);
+  }
+
+  Future<void> markMedicineTaken(Medicine medicine) async {
+    // 1. Cancel main notification (clears tray)
+    await _notificationService.cancelNotification(medicine.notificationId);
+
+    // 2. Cancel any potential snoozed notification (if they snoozed then took it)
+    await _notificationService.cancelNotification(
+      medicine.notificationId + 5000,
+    );
+
+    // 3. Re-schedule main notification for tomorrow to ensure continuity
+    await _notificationService.scheduleNotification(
+      medicine,
+      forceNextDay: true,
+    );
   }
 }

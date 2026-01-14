@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme.dart';
 import '../../data/medicine_model.dart';
+import '../../logic/medicine_provider.dart';
 
-class NotificationPreview extends StatelessWidget {
+class NotificationPreview extends ConsumerWidget {
   final Medicine medicine;
 
   const NotificationPreview({super.key, required this.medicine});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
       child: Dialog(
@@ -103,7 +105,20 @@ class NotificationPreview extends StatelessWidget {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              ref
+                                  .read(medicineNotifierProvider.notifier)
+                                  .snoozeMedicine(
+                                    medicine,
+                                    const Duration(minutes: 10),
+                                  );
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Snoozed for 10 minutes'),
+                                ),
+                              );
+                            },
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
@@ -121,7 +136,18 @@ class NotificationPreview extends StatelessWidget {
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: ElevatedButton(
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: () {
+                                ref
+                                    .read(medicineNotifierProvider.notifier)
+                                    .markMedicineTaken(medicine);
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('${medicine.name} taken!'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 shadowColor: Colors.transparent,

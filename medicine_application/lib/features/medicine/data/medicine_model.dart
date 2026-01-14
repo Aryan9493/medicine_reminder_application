@@ -17,12 +17,19 @@ class Medicine extends HiveObject {
   @HiveField(3)
   final DateTime time;
 
+  @HiveField(4)
+  final int notificationId;
+
   Medicine({
     String? id,
     required this.name,
     required this.dose,
     required this.time,
-  }) : id = id ?? const Uuid().v4();
+    int? notificationId,
+  }) : id = id ?? const Uuid().v4(),
+       notificationId =
+           notificationId ??
+           DateTime.now().millisecondsSinceEpoch.remainder(100000);
 
   Medicine copyWith({String? name, String? dose, DateTime? time}) {
     return Medicine(
@@ -30,6 +37,7 @@ class Medicine extends HiveObject {
       name: name ?? this.name,
       dose: dose ?? this.dose,
       time: time ?? this.time,
+      notificationId: notificationId,
     );
   }
 }

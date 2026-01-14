@@ -18,13 +18,7 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          _buildAppBar(context),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-              child: _buildStatistics(state),
-            ),
-          ),
+          _buildAppBar(context, ref),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -63,155 +57,181 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAppBar(BuildContext context) {
-    return SliverAppBar(
-      expandedHeight: 120,
-      pinned: true,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: const BoxDecoration(gradient: AppTheme.tealGradient),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -20,
-                top: -20,
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundColor: Colors.white.withOpacity(0.1),
+  Widget _buildAppBar(BuildContext context, WidgetRef ref) {
+    final topPadding = MediaQuery.paddingOf(context).top;
+    return SliverToBoxAdapter(
+      child: Container(
+        padding: EdgeInsets.fromLTRB(20, topPadding + 20, 20, 40),
+        decoration: const BoxDecoration(
+          gradient: AppTheme.tealGradient,
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.medication,
+                    color: Colors.white,
+                    size: 30,
+                  ),
                 ),
-              ),
-              const Positioned(
-                bottom: 20,
-                left: 20,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Medicine Reminder',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'My Medicines',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Take care of your health',
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
-                  ],
+                      Text(
+                        'Stay healthy, stay on track',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+                _buildNotificationBell(context, ref),
+              ],
+            ),
+            const SizedBox(height: 30),
+            _buildStatistics(ref.watch(medicineNotifierProvider)),
+          ],
         ),
       ),
-      actions: [
-        Stack(
+    );
+  }
+
+  Widget _buildNotificationBell(BuildContext context, WidgetRef ref) {
+    final medicines = ref.watch(medicineNotifierProvider).medicines;
+    return InkWell(
+      onTap: () {
+        if (medicines.isNotEmpty) {
+          showDialog(
+            context: context,
+            builder: (context) =>
+                NotificationPreview(medicine: medicines.first),
+          );
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('No active reminders')));
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Stack(
+          alignment: Alignment.topRight,
           children: [
-            IconButton(
-              icon: const Icon(Icons.notifications_none, color: Colors.white),
-              onPressed: () {
-                final state = ref.read(medicineNotifierProvider);
-                final medicines = state.medicines;
-                if (medicines.isNotEmpty) {
-                  showDialog(
-                    context: context,
-                    builder: (context) =>
-                        NotificationPreview(medicine: medicines.first),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('No active reminders to preview'),
-                    ),
-                  );
-                }
-              },
-            ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                padding: const EdgeInsets.all(4),
+            const Icon(Icons.notifications_none, color: AppTheme.tealPrimary),
+            if (medicines.isNotEmpty)
+              Container(
+                width: 10,
+                height: 10,
                 decoration: const BoxDecoration(
                   color: Colors.orange,
                   shape: BoxShape.circle,
                 ),
-                constraints: const BoxConstraints(minWidth: 8, minHeight: 8),
               ),
-            ),
           ],
-        ),
-        const SizedBox(width: 8),
-      ],
-    );
-  }
-
-  Widget _buildStatistics(MedicineState state) {
-    return Row(
-      children: [
-        _statCard('Total', '${state.totalCount}', Icons.medication),
-        const SizedBox(width: 12),
-        _statCard('Active', '${state.activeTodayCount}', Icons.today),
-        const SizedBox(width: 12),
-        _statCard('Adherence', '${state.adherencePercentage}%', Icons.favorite),
-      ],
-    );
-  }
-
-  Widget _statCard(String label, String value, IconData icon) {
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Icon(icon, color: AppTheme.tealPrimary, size: 24),
-                const SizedBox(height: 8),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                Text(
-                  label,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );
   }
 
+  Widget _buildStatistics(MedicineState state) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _statColumn('Total\nMedicines', '${state.totalCount}'),
+          _verticalDivider(),
+          _statColumn('Active Today', '${state.activeTodayCount}'),
+          _verticalDivider(),
+          _statColumn('Adherence', '${state.adherencePercentage}%'),
+        ],
+      ),
+    );
+  }
+
+  Widget _statColumn(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _verticalDivider() {
+    return Container(
+      height: 40,
+      width: 1,
+      color: Colors.white.withOpacity(0.2),
+    );
+  }
+
   Widget _buildSearchBar(WidgetRef ref) {
-    return TextField(
-      onChanged: (value) =>
-          ref.read(medicineNotifierProvider.notifier).setSearchQuery(value),
-      decoration: InputDecoration(
-        hintText: 'Search medicines...',
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: const Icon(Icons.tune, color: AppTheme.tealPrimary),
-        fillColor: Colors.white,
-        filled: true,
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        onChanged: (value) =>
+            ref.read(medicineNotifierProvider.notifier).setSearchQuery(value),
+        decoration: const InputDecoration(
+          hintText: 'Search medicines...',
+          prefixIcon: Icon(Icons.search, color: Colors.grey),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(vertical: 15),
+        ),
       ),
     );
   }
@@ -224,32 +244,45 @@ class HomeScreen extends ConsumerWidget {
       {'label': 'Evening', 'value': MedicineFilter.evening},
     ];
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
-        children: filters.map((f) {
-          final isSelected = state.selectedFilter == f['value'];
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(f['label'] as String),
-              selected: isSelected,
-              onSelected: (_) => ref
-                  .read(medicineNotifierProvider.notifier)
-                  .setFilter(f['value'] as MedicineFilter),
-              selectedColor: AppTheme.tealPrimary,
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : Colors.black87,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        children: [
+          const Icon(Icons.tune, color: Colors.grey),
+          const SizedBox(width: 12),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: filters.map((f) {
+                  final isSelected = state.selectedFilter == f['value'];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(f['label'] as String),
+                      selected: isSelected,
+                      onSelected: (_) => ref
+                          .read(medicineNotifierProvider.notifier)
+                          .setFilter(f['value'] as MedicineFilter),
+                      selectedColor: AppTheme.tealPrimary,
+                      labelStyle: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black87,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                      backgroundColor: Colors.grey.shade100,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      side: BorderSide.none,
+                    ),
+                  );
+                }).toList(),
               ),
             ),
-          );
-        }).toList(),
+          ),
+        ],
       ),
     );
   }
@@ -292,132 +325,166 @@ class HomeScreen extends ConsumerWidget {
 
     if (hour >= 5 && hour < 12) {
       timeOfDayStr = 'Morning';
-      timeIcon = Icons.wb_sunny;
+      timeIcon = Icons.wb_sunny_outlined;
       timeColor = Colors.orange;
     } else if (hour >= 12 && hour < 17) {
       timeOfDayStr = 'Afternoon';
       timeIcon = Icons.sunny;
-      timeColor = Colors.amber;
+      timeColor = Colors.orange.shade700;
     } else {
       timeOfDayStr = 'Evening';
-      timeIcon = Icons.nightlight_round;
+      timeIcon = Icons.nightlight_outlined;
       timeColor = Colors.indigo;
     }
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Time for ${medicine.name} at $timeStr'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: AppTheme.tealPrimary,
-            ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: AppTheme.tealGradient,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(
-                  Icons.medication,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            medicine.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                        _badge(timeOfDayStr, timeIcon, timeColor),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.scale, size: 16, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Dose: ${medicine.dose}',
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.access_time,
-                          size: 16,
-                          color: AppTheme.tealPrimary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          timeStr,
-                          style: const TextStyle(
-                            color: AppTheme.tealPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                onPressed: () => _showDeleteDialog(context, ref, medicine),
-              ),
-            ],
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.tealPrimary,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(
+                Icons.medication,
+                color: Colors.white,
+                size: 30,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    medicine.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    medicine.dose,
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _badge(
+                        timeStr,
+                        Icons.access_time,
+                        Colors.teal.shade700,
+                        Colors.teal.shade50,
+                      ),
+                      const SizedBox(width: 8),
+                      _badge(
+                        timeOfDayStr,
+                        timeIcon,
+                        timeColor,
+                        timeColor.withOpacity(0.1),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              children: [
+                _actionButton(
+                  Icons.edit_outlined,
+                  Colors.blue.shade700,
+                  Colors.blue.shade50,
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AddMedicineScreen(medicine: medicine),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+                _actionButton(
+                  Icons.notifications_active_outlined,
+                  Colors.orange.shade700,
+                  Colors.orange.shade50,
+                  () => ref
+                      .read(medicineNotifierProvider.notifier)
+                      .testNotification(medicine),
+                ),
+                const SizedBox(height: 8),
+                _actionButton(
+                  Icons.delete_outline,
+                  Colors.red.shade700,
+                  Colors.red.shade50,
+                  () => _showDeleteDialog(context, ref, medicine),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _badge(String label, IconData icon, Color color) {
+  Widget _badge(String label, IconData icon, Color color, Color bgColor) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
           Text(
             label,
             style: TextStyle(
               color: color,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _actionButton(
+    IconData icon,
+    Color color,
+    Color bgColor,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: color, size: 20),
       ),
     );
   }
@@ -430,10 +497,9 @@ class HomeScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text('Delete Medicine?'),
-        content: Text(
-          'Are you sure you want to delete ${medicine.name}? This cannot be undone.',
-        ),
+        content: Text('Are you sure you want to delete ${medicine.name}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

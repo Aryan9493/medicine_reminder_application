@@ -38,11 +38,23 @@ class NotificationService {
     );
   }
 
-  Future<void> scheduleNotification(Medicine medicine) async {
-    final scheduledDate = _nextInstanceOfTime(medicine.time);
+  Future<void> scheduleNotification(
+    Medicine medicine, {
+    bool forceNextDay = false,
+  }) async {
+    print('🔔 [Notification System] Scheduling Reminder:');
+    print('   - Medicine: ${medicine.name}');
+    print('   - Time: ${medicine.time.hour}:${medicine.time.minute}');
+    print('   - ID: ${medicine.notificationId}');
+    print('   - Force Next Day: $forceNextDay');
+
+    final scheduledDate = _nextInstanceOfTime(
+      medicine.time,
+      forceNextDay: forceNextDay,
+    );
 
     await _notificationsPlugin.zonedSchedule(
-      medicine.id.hashCode,
+      medicine.notificationId,
       'Medicine Reminder',
       'Time to take ${medicine.name} (${medicine.dose})',
       scheduledDate,
@@ -64,11 +76,10 @@ class NotificationService {
     );
   }
 
-  Future<void> cancelNotification(int id) async {
-    await _notificationsPlugin.cancel(id);
-  }
-
-  tz.TZDateTime _nextInstanceOfTime(DateTime time) {
+  tz.TZDateTime _nextInstanceOfTime(
+    DateTime time, {
+    bool forceNextDay = false,
+  }) {
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
     tz.TZDateTime scheduledDate = tz.TZDateTime(
       tz.local,
@@ -78,9 +89,67 @@ class NotificationService {
       time.hour,
       time.minute,
     );
-    if (scheduledDate.isBefore(now)) {
+    // If we want to force next day (e.g. marked taken early) OR if the time is already passed
+    if (forceNextDay || scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
     return scheduledDate;
+  }
+
+  Future<void> showInstantNotification(Medicine medicine) async {
+    print('🚀 [Notification System] TEST DEMO TRIGGERED:');
+    print('   - Medicine: ${medicine.name}');
+    print('   - Unique ID: ${medicine.notificationId + 1000}');
+
+    await _notificationsPlugin.show(
+      medicine.notificationId + 1000,
+      'Medicine Demo: ${medicine.name}',
+      'This is how your reminder will look! (${medicine.dose})',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'medicine_demo_channel',
+          'Medicine Demos',
+          channelDescription: 'Notifications for medicine demos',
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+    );
+  }
+
+  Future<void> snoozeNotification(Medicine medicine, Duration duration) async {
+    print(
+      '💤 [Notification System] Snoozing ${medicine.name} for ${duration.inMinutes} minutes',
+    );
+
+    final snoozedTime = tz.TZDateTime.now(tz.local).add(duration);
+
+    await _notificationsPlugin.zonedSchedule(
+      medicine.notificationId +
+          5000, // Different ID for snooze to avoid conflict
+      'Snoozed: ${medicine.name}',
+      'Reminder to take ${medicine.name} (${medicine.dose})',
+      snoozedTime,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'medicine_reminder_channel',
+          'Medicine Reminders',
+          channelDescription: 'Notifications for medicine reminders',
+          importance: Importance.max,
+          priority: Priority.high,
+          ticker: 'ticker',
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
+  }
+
+  Future<void> cancelNotification(int id) async {
+    print('🗑️ [Notification System] Cancelling Notification ID: $id');
+    await _notificationsPlugin.cancel(id);
   }
 }
