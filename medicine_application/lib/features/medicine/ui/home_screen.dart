@@ -319,11 +319,22 @@ class HomeScreen extends ConsumerWidget {
     final timeStr = DateFormat.jm().format(medicine.time);
     final hour = medicine.time.hour;
 
+    final now = DateTime.now();
+    final isTaken =
+        medicine.lastTakenDate != null &&
+        medicine.lastTakenDate!.year == now.year &&
+        medicine.lastTakenDate!.month == now.month &&
+        medicine.lastTakenDate!.day == now.day;
+
     String timeOfDayStr;
     IconData timeIcon;
     Color timeColor;
 
-    if (hour >= 5 && hour < 12) {
+    if (isTaken) {
+      timeOfDayStr = 'Taken';
+      timeIcon = Icons.check_circle_outline;
+      timeColor = Colors.green;
+    } else if (hour >= 5 && hour < 12) {
       timeOfDayStr = 'Morning';
       timeIcon = Icons.wb_sunny_outlined;
       timeColor = Colors.orange;
@@ -340,7 +351,7 @@ class HomeScreen extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isTaken ? Colors.grey.shade50 : Colors.white,
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
@@ -349,6 +360,9 @@ class HomeScreen extends ConsumerWidget {
             offset: const Offset(0, 10),
           ),
         ],
+        border: isTaken
+            ? Border.all(color: Colors.green.withOpacity(0.3))
+            : null,
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -357,89 +371,113 @@ class HomeScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.tealPrimary,
+                color: isTaken
+                    ? Colors.green.withOpacity(0.1)
+                    : AppTheme.tealPrimary,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Icon(
-                Icons.medication,
-                color: Colors.white,
+              child: Icon(
+                isTaken ? Icons.check : Icons.medication,
+                color: isTaken ? Colors.green : Colors.white,
                 size: 30,
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    medicine.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Colors.black87,
+              child: Opacity(
+                opacity: isTaken ? 0.6 : 1.0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      medicine.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: isTaken ? Colors.grey.shade700 : Colors.black87,
+                        decoration: isTaken ? TextDecoration.lineThrough : null,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    medicine.dose,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _badge(
-                        timeStr,
-                        Icons.access_time,
-                        Colors.teal.shade700,
-                        Colors.teal.shade50,
+                    const SizedBox(height: 4),
+                    Text(
+                      medicine.dose,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
                       ),
-                      const SizedBox(width: 8),
-                      _badge(
-                        timeOfDayStr,
-                        timeIcon,
-                        timeColor,
-                        timeColor.withOpacity(0.1),
-                      ),
-                    ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _badge(
+                          timeStr,
+                          Icons.access_time,
+                          isTaken ? Colors.green : Colors.teal.shade700,
+                          isTaken ? Colors.green.shade50 : Colors.teal.shade50,
+                        ),
+                        const SizedBox(width: 8),
+                        _badge(
+                          timeOfDayStr,
+                          timeIcon,
+                          timeColor,
+                          timeColor.withOpacity(0.1),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (!isTaken)
+              Column(
+                children: [
+                  _actionButton(
+                    Icons.edit_outlined,
+                    Colors.blue.shade700,
+                    Colors.blue.shade50,
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              AddMedicineScreen(medicine: medicine),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  _actionButton(
+                    Icons.notifications_active_outlined,
+                    Colors.orange.shade700,
+                    Colors.orange.shade50,
+                    () => ref
+                        .read(medicineNotifierProvider.notifier)
+                        .testNotification(medicine),
+                    tooltip: 'Test Notification',
+                  ),
+                  const SizedBox(height: 8),
+                  _actionButton(
+                    Icons.delete_outline,
+                    Colors.red.shade700,
+                    Colors.red.shade50,
+                    () => _showDeleteDialog(context, ref, medicine),
+                  ),
+                ],
+              )
+            else
+              // Show only delete or maybe unmark? For now, let's just show delete if user really wants to remove it.
+              // Or simpler, just show nothing or a small visual.
+              // User didn't ask for unmark.
+              Column(
+                children: [
+                  _actionButton(
+                    Icons.delete_outline,
+                    Colors.grey.shade400,
+                    Colors.grey.shade100,
+                    () => _showDeleteDialog(context, ref, medicine),
                   ),
                 ],
               ),
-            ),
-            Column(
-              children: [
-                _actionButton(
-                  Icons.edit_outlined,
-                  Colors.blue.shade700,
-                  Colors.blue.shade50,
-                  () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            AddMedicineScreen(medicine: medicine),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 8),
-                _actionButton(
-                  Icons.notifications_active_outlined,
-                  Colors.orange.shade700,
-                  Colors.orange.shade50,
-                  () => ref
-                      .read(medicineNotifierProvider.notifier)
-                      .testNotification(medicine),
-                  tooltip: 'Test Notification',
-                ),
-                const SizedBox(height: 8),
-                _actionButton(
-                  Icons.delete_outline,
-                  Colors.red.shade700,
-                  Colors.red.shade50,
-                  () => _showDeleteDialog(context, ref, medicine),
-                ),
-              ],
-            ),
           ],
         ),
       ),

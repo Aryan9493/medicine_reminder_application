@@ -1,0 +1,29 @@
+Analyzing medicine_application...                               
+
+   info • 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre • lib/app/theme.dart:32:9 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/add_medicine_screen.dart:289:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/home_screen.dart:76:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/home_screen.dart:101:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/home_screen.dart:164:29 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/home_screen.dart:186:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/home_screen.dart:205:27 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/home_screen.dart:218:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/home_screen.dart:358:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/home_screen.dart:364:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/home_screen.dart:375:36 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/home_screen.dart:423:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/widgets/notification_preview.dart:26:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/widgets/notification_preview.dart:48:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicine/ui/widgets/notification_preview.dart:90:46 • deprecated_member_use
+  error • A value of type 'TimezoneInfo' can't be assigned to a variable of type 'String' • lib/services/notification_service.dart:17:33 • invalid_assignment
+   info • Don't invoke 'print' in production code • lib/services/notification_service.dart:48:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/services/notification_service.dart:49:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/services/notification_service.dart:50:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/services/notification_service.dart:51:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/services/notification_service.dart:52:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/services/notification_service.dart:103:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/services/notification_service.dart:104:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/services/notification_service.dart:105:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/services/notification_service.dart:125:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/services/notification_service.dart:155:5 • avoid_print
+

@@ -81,6 +81,20 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
   void _sortAndSetState(List<Medicine> medicines) {
     medicines.sort((a, b) {
       final now = DateTime.now();
+      final isTakenA =
+          a.lastTakenDate != null &&
+          a.lastTakenDate!.year == now.year &&
+          a.lastTakenDate!.month == now.month &&
+          a.lastTakenDate!.day == now.day;
+      final isTakenB =
+          b.lastTakenDate != null &&
+          b.lastTakenDate!.year == now.year &&
+          b.lastTakenDate!.month == now.month &&
+          b.lastTakenDate!.day == now.day;
+
+      if (isTakenA && !isTakenB) return 1;
+      if (!isTakenA && isTakenB) return -1;
+
       final timeA = DateTime(
         now.year,
         now.month,
