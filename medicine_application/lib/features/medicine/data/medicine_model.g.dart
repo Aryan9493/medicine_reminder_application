@@ -22,13 +22,14 @@ class MedicineAdapter extends TypeAdapter<Medicine> {
       dose: fields[2] as String,
       time: fields[3] as DateTime,
       notificationId: fields[4] as int?,
+      lastTakenDate: fields[5] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Medicine obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -38,7 +39,9 @@ class MedicineAdapter extends TypeAdapter<Medicine> {
       ..writeByte(3)
       ..write(obj.time)
       ..writeByte(4)
-      ..write(obj.notificationId);
+      ..write(obj.notificationId)
+      ..writeByte(5)
+      ..write(obj.lastTakenDate);
   }
 
   @override

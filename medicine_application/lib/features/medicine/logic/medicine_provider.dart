@@ -159,10 +159,17 @@ class MedicineNotifier extends StateNotifier<MedicineState> {
       medicine.notificationId + 5000,
     );
 
-    // 3. Re-schedule main notification for tomorrow to ensure continuity
+    // 3. Update state to track that it was taken today
+    final updatedMedicine = medicine.copyWith(lastTakenDate: DateTime.now());
+    await _storage.updateMedicine(updatedMedicine);
+
+    // 4. Re-schedule main notification for tomorrow to ensure continuity
     await _notificationService.scheduleNotification(
-      medicine,
+      updatedMedicine,
       forceNextDay: true,
     );
+
+    // 5. Refresh UI
+    _loadMedicines();
   }
 }

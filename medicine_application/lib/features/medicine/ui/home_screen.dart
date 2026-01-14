@@ -429,6 +429,7 @@ class HomeScreen extends ConsumerWidget {
                   () => ref
                       .read(medicineNotifierProvider.notifier)
                       .testNotification(medicine),
+                  tooltip: 'Test Notification',
                 ),
                 const SizedBox(height: 8),
                 _actionButton(
@@ -474,17 +475,21 @@ class HomeScreen extends ConsumerWidget {
     IconData icon,
     Color color,
     Color bgColor,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(12),
+    VoidCallback onTap, {
+    String? tooltip,
+  }) {
+    return Tooltip(
+      message: tooltip ?? '',
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: color, size: 20),
         ),
-        child: Icon(icon, color: color, size: 20),
       ),
     );
   }
